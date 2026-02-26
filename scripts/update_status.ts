@@ -90,12 +90,17 @@ async function main() {
 	if (existsSync(HEALTH_PATH)) {
 		healthData = JSON.parse(readFileSync(HEALTH_PATH, "utf-8")) as ApiHealthData
 	}
-	healthData.checks.push({ t: now.toISOString(), latencyMs: healthLatencyMs, ok: healthOk })
+	healthData.checks.push({
+		t: now.toISOString(),
+		latencyMs: healthLatencyMs,
+		dataLatencyMs: apiLatencyMs,
+		ok: healthOk,
+	})
 	if (healthData.checks.length > MAX_HEALTH_CHECKS) {
 		healthData.checks.splice(0, healthData.checks.length - MAX_HEALTH_CHECKS)
 	}
 
-	const summary = buildStatusSummary(current)
+	const summary = buildStatusSummary(current, healthLatencyMs)
 
 	writeFileSync(CURRENT_PATH, JSON.stringify(current, null, 2))
 	writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2))
