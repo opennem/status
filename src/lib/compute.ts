@@ -305,11 +305,15 @@ const STATUS_LABELS: Record<HealthStatus, string> = {
 }
 
 /** Build lightweight summary for external embeds */
-export function buildStatusSummary(current: CurrentStatus): StatusSummary {
+export function buildStatusSummary(
+	current: CurrentStatus,
+	healthLatencyMs?: number,
+): StatusSummary {
 	const status = computeOverallStatus(current.series)
 	return {
 		status,
-		apiLatencyMs: current.apiLatencyMs,
+		apiLatencyMs: healthLatencyMs ?? current.apiLatencyMs,
+		dataLatencyMs: current.apiLatencyMs,
 		checkedAt: current.checkedAt,
 		statusColor: STATUS_COLORS[status],
 		statusLabel: STATUS_LABELS[status],

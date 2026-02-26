@@ -3,7 +3,8 @@ export type HealthStatus = "operational" | "degraded" | "down"
 /** Single API health check point */
 export interface ApiHealthCheck {
 	t: string // ISO timestamp
-	latencyMs: number // response time in ms
+	latencyMs: number // health ping latency in ms
+	dataLatencyMs: number // data query latency in ms
 	ok: boolean // /health returned OK
 }
 
@@ -71,7 +72,8 @@ export interface HistoryDay {
 /** summary.json schema — lightweight status for embeds */
 export interface StatusSummary {
 	status: HealthStatus
-	apiLatencyMs: number
+	apiLatencyMs: number // health ping latency
+	dataLatencyMs: number // data query latency
 	checkedAt: string
 	statusColor: string
 	statusLabel: string

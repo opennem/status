@@ -97,13 +97,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 	const MAX_HEALTH_CHECKS = 8640
 	const existing = await kv.get<ApiHealthData>("api-health")
 	const checks = existing?.checks ?? []
-	checks.push({ t: now.toISOString(), latencyMs: healthLatencyMs, ok: healthOk })
+	checks.push({
+		t: now.toISOString(),
+		latencyMs: healthLatencyMs,
+		dataLatencyMs: apiLatencyMs,
+		ok: healthOk,
+	})
 	if (checks.length > MAX_HEALTH_CHECKS) {
 		checks.splice(0, checks.length - MAX_HEALTH_CHECKS)
 	}
 	await kv.set("api-health", { checks } satisfies ApiHealthData)
 
-	const summary = buildStatusSummary(current)
+	const summary = buildStatusSummary(current, healthLatencyMs)
 
 	await Promise.all([
 		writeBlob("current.json", current),
