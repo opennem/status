@@ -8,7 +8,12 @@ import type {
 	SeriesStatus,
 	StatusHistory,
 } from "../types/status.js"
-import { COVERAGE_THRESHOLDS, NEM_REGIONS, SERIES_DEFINITIONS } from "./constants.js"
+import {
+	COVERAGE_THRESHOLDS,
+	CRON_OFFSET_MINUTES,
+	NEM_REGIONS,
+	SERIES_DEFINITIONS,
+} from "./constants.js"
 
 const AEST_MS = getNetworkTimezoneOffset("NEM")
 
@@ -114,17 +119,19 @@ function buildRegionStatus(
 ): RegionStatus {
 	const { lastUpdate, coverage, intervals } = analyzeRegionData(results, dataInterval, windowStart)
 
-	const lagMinutes = lastUpdate
+	const rawLagMinutes = lastUpdate
 		? (now.getTime() - lastUpdate.getTime()) / 60000
 		: Number.POSITIVE_INFINITY
+	// Subtract cron offset for display — cron runs 2min after interval boundary
+	const displayLag = Math.max(0, rawLagMinutes - CRON_OFFSET_MINUTES)
 
-	const lagStatus = lagToStatus(lagMinutes, okThreshold, warnThreshold)
+	const lagStatus = lagToStatus(rawLagMinutes, okThreshold, warnThreshold)
 	const covStatus = coverageToStatus(coverage)
 
 	return {
 		region,
 		status: worstStatus(lagStatus, covStatus),
-		lagMinutes: Math.round(lagMinutes === Number.POSITIVE_INFINITY ? -1 : lagMinutes),
+		lagMinutes: Math.round(rawLagMinutes === Number.POSITIVE_INFINITY ? -1 : displayLag),
 		coverage: Math.round(coverage * 10) / 10,
 		intervals,
 	}

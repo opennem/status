@@ -15,13 +15,16 @@ export interface SeriesDefinition {
 	thresholds: { ok: number; warning: number }
 }
 
+/** Cron runs 2min after each 5min boundary — subtract from raw lag for display */
+export const CRON_OFFSET_MINUTES = 2
+
 export const SERIES_DEFINITIONS: SeriesDefinition[] = [
 	{
 		id: "generation",
 		name: "Generation",
 		description: "Dispatch generation",
 		dataInterval: "5m",
-		thresholds: { ok: 20, warning: 30 },
+		thresholds: { ok: 15, warning: 30 },
 	},
 	{
 		id: "rooftop_aemo",
@@ -42,28 +45,28 @@ export const SERIES_DEFINITIONS: SeriesDefinition[] = [
 		name: "Price",
 		description: "Spot price",
 		dataInterval: "5m",
-		thresholds: { ok: 20, warning: 30 },
+		thresholds: { ok: 15, warning: 30 },
 	},
 	{
 		id: "demand",
 		name: "Demand",
 		description: "Operational demand",
 		dataInterval: "5m",
-		thresholds: { ok: 20, warning: 30 },
+		thresholds: { ok: 15, warning: 30 },
 	},
 	{
 		id: "interconnectors",
 		name: "Interconnectors",
 		description: "Interconnector flows",
 		dataInterval: "5m",
-		thresholds: { ok: 20, warning: 30 },
+		thresholds: { ok: 15, warning: 30 },
 	},
 	{
 		id: "emissions",
 		name: "Emissions",
 		description: "Emissions intensity",
 		dataInterval: "5m",
-		thresholds: { ok: 20, warning: 30 },
+		thresholds: { ok: 15, warning: 30 },
 	},
 ]
 
