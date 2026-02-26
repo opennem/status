@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { OpenElectricityClient, getNetworkTimezoneOffset } from "openelectricity"
 import type { INetworkTimeSeries, ITimeSeriesResult } from "openelectricity"
@@ -128,8 +128,6 @@ async function main() {
 	// Get current AEST date
 	const nowUtc = Date.now()
 	const nowAest = new Date(nowUtc + AEST_MS)
-	const todayAest = nowAest.toISOString().slice(0, 10)
-
 	const history: StatusHistory = {
 		v: 1,
 		updatedAt: new Date().toISOString(),
@@ -213,7 +211,7 @@ async function main() {
 				regions,
 			}
 
-			history.series[def.id].push(day)
+			history.series[def.id]?.push(day)
 		}
 	}
 
@@ -222,7 +220,7 @@ async function main() {
 
 	// Summary
 	for (const def of SERIES_DEFINITIONS) {
-		const days = history.series[def.id]
+		const days = history.series[def.id] ?? []
 		console.log(`  ${def.id}: ${days.length} days backfilled`)
 	}
 }

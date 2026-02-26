@@ -1,7 +1,6 @@
 import type {
 	CurrentStatus,
 	HealthStatus,
-	HistoryDay,
 	RegionDayCounts,
 	RegionStatus,
 	SeriesStatus,
@@ -258,7 +257,7 @@ export function updateHistory(
 			history.series[s.id] = []
 		}
 
-		const days = history.series[s.id]
+		const days = history.series[s.id] ?? []
 		let todayEntry = days.find((d) => d.date === today)
 
 		if (!todayEntry) {
@@ -267,14 +266,16 @@ export function updateHistory(
 		}
 
 		todayEntry.checks++
-		todayEntry[s.status]++
+		const seriesField = s.status === "operational" ? "ok" : s.status
+		todayEntry[seriesField]++
 
 		for (const r of s.regions) {
 			if (!todayEntry.regions[r.region]) {
 				todayEntry.regions[r.region] = { ok: 0, degraded: 0, down: 0, intervals: "" }
 			}
 			const rc = todayEntry.regions[r.region] as RegionDayCounts
-			rc[r.status]++
+			const regionField = r.status === "operational" ? "ok" : r.status
+			rc[regionField]++
 			// Overwrite intervals each check — last check of the day has the most complete view
 			rc.intervals = r.intervals
 		}
