@@ -1,7 +1,8 @@
+import { ApiHealthChart } from "@/components/api_health_chart"
 import { SeriesRow } from "@/components/series_row"
 import { StatusHeader } from "@/components/status_header"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useCurrentStatus, useStatusHistory } from "@/hooks/use_status"
+import { useApiHealth, useCurrentStatus, useStatusHistory } from "@/hooks/use_status"
 import { HISTORY_DAYS, SERIES_DEFINITIONS } from "@/lib/constants"
 import { formatShortDate } from "@/lib/uptime"
 import { AlertCircle } from "lucide-react"
@@ -9,6 +10,7 @@ import { AlertCircle } from "lucide-react"
 export function OverviewPage() {
 	const { data: current, isLoading: loadingCurrent, error: currentError } = useCurrentStatus()
 	const { data: history, isLoading: loadingHistory } = useStatusHistory()
+	const { data: apiHealth, isLoading: loadingHealth } = useApiHealth()
 
 	const isLoading = loadingCurrent || loadingHistory
 	const error = currentError
@@ -53,6 +55,11 @@ export function OverviewPage() {
 						})}
 					</div>
 				)}
+			</div>
+
+			<div className="border-b bg-card px-6 py-6">
+				<h2 className="text-sm font-semibold uppercase tracking-wider mb-4">API Health</h2>
+				<ApiHealthChart checks={apiHealth?.checks ?? []} isLoading={loadingHealth} />
 			</div>
 
 			<div className="px-6 py-3">

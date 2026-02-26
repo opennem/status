@@ -5,3 +5,4 @@ public/data/
 .vercel
 dist/
 *.tsbuildinfo
+.env*.local

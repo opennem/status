@@ -10,10 +10,12 @@
 		"lint": "biome check src/ scripts/ api/",
 		"format": "biome check --write src/ scripts/ api/",
 		"update-status": "bun run scripts/update_status.ts",
-		"backfill": "bun run scripts/backfill_history.ts"
+		"backfill": "bun run scripts/backfill_history.ts",
+		"backfill-prod": "bun run scripts/backfill_prod.ts"
 	},
 	"dependencies": {
 		"@vercel/blob": "^0.27.0",
+		"@vercel/kv": "^3.0.0",
 		"openelectricity": "^0.7.1-0",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",

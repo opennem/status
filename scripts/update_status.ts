@@ -2,11 +2,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { OpenElectricityClient, getNetworkTimezoneOffset } from "openelectricity"
 import { computeCurrentStatus, updateHistory } from "../src/lib/compute"
-import type { StatusHistory } from "../src/types/status"
+import type { ApiHealthData, StatusHistory } from "../src/types/status"
 
 const OUT_DIR = resolve(import.meta.dirname, "../public/data")
 const CURRENT_PATH = resolve(OUT_DIR, "current.json")
 const HISTORY_PATH = resolve(OUT_DIR, "history.json")
+const HEALTH_PATH = resolve(OUT_DIR, "api-health.json")
 
 const AEST_MS = getNetworkTimezoneOffset("NEM")
 
@@ -69,11 +70,37 @@ async function main() {
 
 	const history = updateHistory(existingHistory, current)
 
+	// Health check: ping /health endpoint and record latency
+	let healthLatencyMs = 0
+	let healthOk = false
+	try {
+		const healthStart = performance.now()
+		const healthRes = await fetch("https://api.openelectricity.org.au/health")
+		healthLatencyMs = Math.round(performance.now() - healthStart)
+		healthOk = healthRes.ok
+	} catch {
+		healthLatencyMs = 0
+		healthOk = false
+	}
+	console.log(`Health check: ${healthOk ? "OK" : "FAIL"} in ${healthLatencyMs}ms`)
+
+	const MAX_HEALTH_CHECKS = 8640
+	let healthData: ApiHealthData = { checks: [] }
+	if (existsSync(HEALTH_PATH)) {
+		healthData = JSON.parse(readFileSync(HEALTH_PATH, "utf-8")) as ApiHealthData
+	}
+	healthData.checks.push({ t: now.toISOString(), latencyMs: healthLatencyMs, ok: healthOk })
+	if (healthData.checks.length > MAX_HEALTH_CHECKS) {
+		healthData.checks.splice(0, healthData.checks.length - MAX_HEALTH_CHECKS)
+	}
+
 	writeFileSync(CURRENT_PATH, JSON.stringify(current, null, 2))
 	writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2))
+	writeFileSync(HEALTH_PATH, JSON.stringify(healthData, null, 2))
 
 	console.log(`Wrote ${CURRENT_PATH}`)
 	console.log(`Wrote ${HISTORY_PATH}`)
+	console.log(`Wrote ${HEALTH_PATH}`)
 
 	for (const s of current.series) {
 		console.log(`  ${s.id}: ${s.status} (lag ${s.lagMinutes}m, coverage ${s.coverage}%)`)

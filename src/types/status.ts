@@ -1,5 +1,17 @@
 export type HealthStatus = "operational" | "degraded" | "down"
 
+/** Single API health check point */
+export interface ApiHealthCheck {
+	t: string // ISO timestamp
+	latencyMs: number // response time in ms
+	ok: boolean // /health returned OK
+}
+
+/** Rolling window of API health checks */
+export interface ApiHealthData {
+	checks: ApiHealthCheck[]
+}
+
 export type SeriesId =
 	| "generation"
 	| "rooftop_aemo"

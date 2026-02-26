@@ -1,8 +1,9 @@
 import { list, put } from "@vercel/blob"
+import { kv } from "@vercel/kv"
 import type { VercelRequest, VercelResponse } from "@vercel/node"
 import { OpenElectricityClient, getNetworkTimezoneOffset } from "openelectricity"
 import { computeCurrentStatus, updateHistory } from "../../src/lib/compute.js"
-import type { StatusHistory } from "../../src/types/status.js"
+import type { ApiHealthData, StatusHistory } from "../../src/types/status.js"
 
 const AEST_MS = getNetworkTimezoneOffset("NEM")
 
@@ -79,6 +80,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 	const existingHistory = await readBlob<StatusHistory>("history.json")
 	const history = updateHistory(existingHistory, current)
+
+	// Health check: ping /health endpoint and record latency
+	let healthLatencyMs = 0
+	let healthOk = false
+	try {
+		const healthStart = performance.now()
+		const healthRes = await fetch("https://api.openelectricity.org.au/health")
+		healthLatencyMs = Math.round(performance.now() - healthStart)
+		healthOk = healthRes.ok
+	} catch {
+		healthLatencyMs = 0
+		healthOk = false
+	}
+
+	const MAX_HEALTH_CHECKS = 8640
+	const existing = await kv.get<ApiHealthData>("api-health")
+	const checks = existing?.checks ?? []
+	checks.push({ t: now.toISOString(), latencyMs: healthLatencyMs, ok: healthOk })
+	if (checks.length > MAX_HEALTH_CHECKS) {
+		checks.splice(0, checks.length - MAX_HEALTH_CHECKS)
+	}
+	await kv.set("api-health", { checks } satisfies ApiHealthData)
 
 	await Promise.all([writeBlob("current.json", current), writeBlob("history.json", history)])
 
