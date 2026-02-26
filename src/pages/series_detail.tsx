@@ -9,8 +9,13 @@ import { formatShortDate, formatUptime, uptimePercent } from "@/lib/uptime"
 import { NotFoundPage } from "@/pages/not_found"
 import type { HistoryDay, SeriesId } from "@/types/status"
 import { format, parseISO } from "date-fns"
-import { useState } from "react"
+import { getNetworkTimezoneOffset } from "openelectricity"
+import { useMemo, useState } from "react"
 import { useParams } from "react-router-dom"
+
+const AEST_MS = getNetworkTimezoneOffset("NEM")
+const DAY_MS = 24 * 60 * 60 * 1000
+const INTERVAL_MS = 5 * 60 * 1000
 
 const STATUS_LABELS: Record<string, string> = {
 	operational: "Operational",
@@ -58,6 +63,17 @@ export function SeriesDetailPage() {
 		}
 		return selectedDay?.regions[region]?.intervals ?? ""
 	}
+
+	// Compute rolling window start hour in AEST for today's interval labels
+	const todayStartHourAest = useMemo(() => {
+		const nowAest = Date.now() + AEST_MS
+		// Snap to last complete 5min interval (with 5min leeway)
+		const snapped = Math.floor(nowAest / INTERVAL_MS) * INTERVAL_MS
+		const windowStartAest = snapped - DAY_MS
+		// Extract fractional hour-of-day
+		const msInDay = ((windowStartAest % DAY_MS) + DAY_MS) % DAY_MS
+		return msInDay / (60 * 60 * 1000)
+	}, [])
 
 	if (!definition) {
 		return <NotFoundPage />
@@ -125,6 +141,7 @@ export function SeriesDetailPage() {
 								bitmap={bitmap}
 								dataInterval={definition.dataInterval as "5m" | "30m"}
 								label={region}
+								startHourAest={isToday ? todayStartHourAest : 0}
 							/>
 						)
 					})}

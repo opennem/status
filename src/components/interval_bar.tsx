@@ -9,24 +9,44 @@ interface IntervalBarProps {
 	dataInterval?: "5m" | "30m"
 	/** Region label shown to the left */
 	label?: string
+	/** AEST start hour of the window (0 for midnight-based, e.g. 15.67 for 15:40) */
+	startHourAest?: number
 }
 
-const HOUR_LABELS = ["00", "06", "12", "18"]
+/** Format hour offset to HH label, wrapping at 24 */
+function formatHourLabel(hour: number): string {
+	return String(Math.floor(((hour % 24) + 24) % 24)).padStart(2, "0")
+}
 
-function intervalToTime(index: number, is30m: boolean): string {
+function intervalToTime(index: number, is30m: boolean, startHourAest: number): string {
 	const minutesPerInterval = is30m ? 30 : 5
-	const totalMinutes = index * minutesPerInterval
-	const h = String(Math.floor(totalMinutes / 60)).padStart(2, "0")
-	const m = String(totalMinutes % 60).padStart(2, "0")
+	const startMinutes = Math.round(startHourAest * 60)
+	const totalMinutes = startMinutes + index * minutesPerInterval
+	const wrapped = ((totalMinutes % 1440) + 1440) % 1440
+	const h = String(Math.floor(wrapped / 60)).padStart(2, "0")
+	const m = String(wrapped % 60).padStart(2, "0")
 	return `${h}:${m}`
 }
 
-export function IntervalBar({ bitmap, dataInterval = "5m", label }: IntervalBarProps) {
+function buildHourLabels(startHourAest: number): string[] {
+	const base = Math.ceil(startHourAest / 6) * 6
+	return [0, 6, 12, 18].map((offset) => formatHourLabel(base + offset))
+}
+
+export function IntervalBar({
+	bitmap,
+	dataInterval = "5m",
+	label,
+	startHourAest = 0,
+}: IntervalBarProps) {
 	const intervals = parseIntervals(bitmap)
 	const is30m = dataInterval === "30m"
 	const intervalsPerHour = is30m ? 2 : 12
 	const containerRef = useRef<HTMLDivElement>(null)
 	const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null)
+
+	const hourLabels = buildHourLabels(startHourAest)
+	const endLabel = formatHourLabel(startHourAest + 24)
 
 	const handleMouseMove = useCallback(
 		(e: React.MouseEvent) => {
@@ -39,7 +59,7 @@ export function IntervalBar({ bitmap, dataInterval = "5m", label }: IntervalBarP
 				setTooltip(null)
 				return
 			}
-			const time = intervalToTime(idx, is30m)
+			const time = intervalToTime(idx, is30m, startHourAest)
 			const status = intervals[idx] ? "Present" : "Missing"
 			setTooltip({
 				text: `${time} — ${status}`,
@@ -47,7 +67,7 @@ export function IntervalBar({ bitmap, dataInterval = "5m", label }: IntervalBarP
 				y: rect.top,
 			})
 		},
-		[intervals, is30m],
+		[intervals, is30m, startHourAest],
 	)
 
 	const handleMouseLeave = useCallback(() => setTooltip(null), [])
@@ -85,12 +105,12 @@ export function IntervalBar({ bitmap, dataInterval = "5m", label }: IntervalBarP
 			</div>
 			{/* Hour labels */}
 			<div className="flex justify-between mt-0.5 px-0">
-				{HOUR_LABELS.map((h) => (
-					<span key={h} className="text-[9px] font-mono text-muted-foreground/60">
+				{hourLabels.map((h, i) => (
+					<span key={`${h}-${i}`} className="text-[9px] font-mono text-muted-foreground/60">
 						{h}
 					</span>
 				))}
-				<span className="text-[9px] font-mono text-muted-foreground/60">24</span>
+				<span className="text-[9px] font-mono text-muted-foreground/60">{endLabel}</span>
 			</div>
 			{tooltip && (
 				<div
