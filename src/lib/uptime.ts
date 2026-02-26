@@ -1,10 +1,26 @@
-import type { HealthStatus, HistoryDay } from "@/types/status"
+import type { HealthStatus, HistoryDay, RegionDayCounts } from "@/types/status"
 
 /** Determine overall status for a single day.
  * Orange only for "down" checks (real outages). Degraded alone stays green. */
 export function dayStatus(day: HistoryDay): HealthStatus {
 	if (day.down > 0) return "degraded"
 	return "operational"
+}
+
+/** Patch today's history entry with live status so stale down/degraded counts
+ *  from pre-grace-period checks don't taint today's bar or uptime %. */
+export function patchTodayLive(days: HistoryDay[], liveStatus: HealthStatus): HistoryDay[] {
+	if (liveStatus !== "operational") return days
+	const todayStr = new Date().toISOString().slice(0, 10)
+	return days.map((d) => {
+		if (d.date !== todayStr) return d
+		const regions: Record<string, RegionDayCounts> = {}
+		for (const [key, rc] of Object.entries(d.regions)) {
+			const total = rc.ok + rc.degraded + rc.down
+			regions[key] = { ...rc, down: 0, degraded: 0, ok: total }
+		}
+		return { ...d, down: 0, degraded: 0, ok: d.checks, regions }
+	})
 }
 
 /** Calculate uptime percentage — only "down" checks count as failures */

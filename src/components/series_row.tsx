@@ -1,6 +1,6 @@
 import { UptimeBars } from "@/components/uptime_bars"
 import { SERIES_DEFINITIONS } from "@/lib/constants"
-import { formatUptime, uptimePercent } from "@/lib/uptime"
+import { formatUptime, patchTodayLive, uptimePercent } from "@/lib/uptime"
 import type { HistoryDay, SeriesStatus } from "@/types/status"
 import { ChevronRight } from "lucide-react"
 import { Link } from "react-router-dom"
@@ -11,7 +11,8 @@ interface SeriesRowProps {
 	days: HistoryDay[]
 }
 
-export function SeriesRow({ series, days }: SeriesRowProps) {
+export function SeriesRow({ series, days: rawDays }: SeriesRowProps) {
+	const days = patchTodayLive(rawDays, series.status)
 	const uptime = uptimePercent(days)
 	const name = SERIES_DEFINITIONS.find((d) => d.id === series.id)?.name ?? series.id
 

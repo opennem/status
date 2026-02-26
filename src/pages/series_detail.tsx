@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { UptimeBars } from "@/components/uptime_bars"
 import { useCurrentStatus, useStatusHistory } from "@/hooks/use_status"
 import { GRACE_INTERVALS, HISTORY_DAYS, NEM_REGIONS, SERIES_DEFINITIONS } from "@/lib/constants"
-import { formatShortDate, formatUptime, uptimePercent } from "@/lib/uptime"
+import { formatShortDate, formatUptime, patchTodayLive, uptimePercent } from "@/lib/uptime"
 import { NotFoundPage } from "@/pages/not_found"
 import type { HistoryDay, SeriesId } from "@/types/status"
 import { format, parseISO } from "date-fns"
@@ -47,7 +47,8 @@ export function SeriesDetailPage() {
 	const isLoading = loadingCurrent || loadingHistory
 	const definition = SERIES_DEFINITIONS.find((d) => d.id === seriesId)
 	const series = current?.series.find((s) => s.id === (seriesId as SeriesId))
-	const days = history?.series[seriesId ?? ""] ?? []
+	const rawDays = history?.series[seriesId ?? ""] ?? []
+	const days = series ? patchTodayLive(rawDays, series.status) : rawDays
 	const uptime = uptimePercent(days)
 
 	const todayStr = new Date().toISOString().slice(0, 10)
