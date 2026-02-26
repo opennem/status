@@ -7,16 +7,16 @@ export function dayStatus(day: HistoryDay): HealthStatus {
 	return "operational"
 }
 
-/** Calculate uptime percentage from an array of history days */
+/** Calculate uptime percentage — only "down" checks count as failures */
 export function uptimePercent(days: HistoryDay[]): number {
 	let totalChecks = 0
-	let okChecks = 0
+	let downChecks = 0
 	for (const d of days) {
 		totalChecks += d.checks
-		okChecks += d.ok
+		downChecks += d.down
 	}
 	if (totalChecks === 0) return 100
-	return (okChecks / totalChecks) * 100
+	return ((totalChecks - downChecks) / totalChecks) * 100
 }
 
 /** Format uptime percentage for display */
