@@ -81,7 +81,7 @@ export function IntervalBar({
 				key={i}
 				className={cn(
 					"flex-1 min-w-0",
-					intervals[i] ? "bg-emerald-500" : "bg-muted-foreground/15",
+					intervals[i] ? "bg-emerald-500" : "bg-red-500/70",
 					isHourBoundary && "ml-px",
 				)}
 			/>,
