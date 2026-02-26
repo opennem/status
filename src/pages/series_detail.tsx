@@ -74,7 +74,7 @@ export function SeriesDetailPage() {
 					<div>
 						<h1 className="text-xl font-display">{definition.name}</h1>
 						<p className="text-xs text-muted-foreground mt-0.5">
-							Source: {definition.description} · {definition.dataInterval} intervals
+							{definition.description} · {definition.dataInterval} intervals
 						</p>
 					</div>
 					{isLoading ? (
@@ -91,7 +91,7 @@ export function SeriesDetailPage() {
 			{/* Overall uptime bar */}
 			<div className="bg-card border-b px-6 py-6">
 				<div className="flex items-center justify-between mb-2">
-					<h3 className="text-xs font-medium text-muted-foreground">{HISTORY_DAYS}-Day Uptime</h3>
+					<h3 className="text-xs font-medium text-muted-foreground">{HISTORY_DAYS}-Day Status</h3>
 					<span className="text-xs font-mono text-muted-foreground stat-value">
 						{formatUptime(uptime)}
 					</span>

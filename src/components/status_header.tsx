@@ -24,7 +24,7 @@ export function StatusHeader({ series, checkedAt, isLoading }: StatusHeaderProps
 
 	return (
 		<div className="border-b bg-card px-6 py-8">
-			<h1 className="text-2xl font-display">OpenElectricity Status</h1>
+			<h1 className="text-2xl font-display">Open Electricity Status</h1>
 			{isLoading ? (
 				<Skeleton className="mt-2 h-5 w-64" />
 			) : (

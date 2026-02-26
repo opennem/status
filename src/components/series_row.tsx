@@ -21,7 +21,7 @@ export function SeriesRow({ series, days }: SeriesRowProps) {
 				<HealthDot status={series.status} size="md" pulse={series.status === "operational"} />
 				<span className="flex-1 text-sm font-medium">{name}</span>
 				<span className="text-xs font-mono text-muted-foreground stat-value">
-					{formatUptime(uptime)} uptime
+					{formatUptime(uptime)}
 				</span>
 				<ChevronRight className="h-4 w-4 text-muted-foreground/50" />
 			</div>
