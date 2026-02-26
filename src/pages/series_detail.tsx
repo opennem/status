@@ -6,6 +6,7 @@ import { UptimeBars } from "@/components/uptime_bars"
 import { useCurrentStatus, useStatusHistory } from "@/hooks/use_status"
 import { HISTORY_DAYS, NEM_REGIONS, SERIES_DEFINITIONS } from "@/lib/constants"
 import { formatShortDate, formatUptime, uptimePercent } from "@/lib/uptime"
+import { NotFoundPage } from "@/pages/not_found"
 import type { HistoryDay, SeriesId } from "@/types/status"
 import { format, parseISO } from "date-fns"
 import { useState } from "react"
@@ -59,11 +60,7 @@ export function SeriesDetailPage() {
 	}
 
 	if (!definition) {
-		return (
-			<div className="p-6">
-				<p className="text-sm text-muted-foreground">Unknown series: {seriesId}</p>
-			</div>
-		)
+		return <NotFoundPage />
 	}
 
 	return (
