@@ -18,6 +18,9 @@ export interface SeriesDefinition {
 /** Cron runs 2min after each 5min boundary — subtract from raw lag for display */
 export const CRON_OFFSET_MINUTES = 2
 
+/** Trailing intervals treated as "pending" (AEMO publishes ~5min after interval end) */
+export const GRACE_INTERVALS = 3
+
 export const SERIES_DEFINITIONS: SeriesDefinition[] = [
 	{
 		id: "generation",

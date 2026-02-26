@@ -11,6 +11,7 @@ import type {
 import {
 	COVERAGE_THRESHOLDS,
 	CRON_OFFSET_MINUTES,
+	GRACE_INTERVALS,
 	NEM_REGIONS,
 	SERIES_DEFINITIONS,
 } from "./constants.js"
@@ -48,6 +49,7 @@ function analyzeRegionData(
 	results: ITimeSeriesResult[],
 	dataInterval: string,
 	windowStart: Date,
+	now: Date,
 ): { lastUpdate: Date | null; coverage: number; intervals: string } {
 	const totalExpected = expectedIntervals(dataInterval)
 	const intMs = intervalMs(dataInterval)
@@ -83,7 +85,21 @@ function analyzeRegionData(
 		}
 	}
 
-	const coverage = totalExpected > 0 ? (presentCount / totalExpected) * 100 : 0
+	// Exclude trailing grace-period slots from coverage denominator
+	const nowAest = now.getTime() + AEST_MS
+	const graceThreshold = nowAest - GRACE_INTERVALS * intMs
+	let graceCount = 0
+	for (let i = totalExpected - 1; i >= 0; i--) {
+		const t = alignedStart + i * intMs
+		if (t >= graceThreshold && bits[i] === "0") {
+			graceCount++
+		} else {
+			break
+		}
+	}
+
+	const effectiveTotal = totalExpected - graceCount
+	const coverage = effectiveTotal > 0 ? (presentCount / effectiveTotal) * 100 : 0
 
 	return {
 		lastUpdate: latestTs ? new Date(latestTs - AEST_MS) : null,
@@ -117,7 +133,12 @@ function buildRegionStatus(
 	okThreshold: number,
 	warnThreshold: number,
 ): RegionStatus {
-	const { lastUpdate, coverage, intervals } = analyzeRegionData(results, dataInterval, windowStart)
+	const { lastUpdate, coverage, intervals } = analyzeRegionData(
+		results,
+		dataInterval,
+		windowStart,
+		now,
+	)
 
 	const rawLagMinutes = lastUpdate
 		? (now.getTime() - lastUpdate.getTime()) / 60000

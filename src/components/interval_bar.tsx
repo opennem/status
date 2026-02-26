@@ -11,6 +11,8 @@ interface IntervalBarProps {
 	label?: string
 	/** AEST start hour of the window (0 for midnight-based, e.g. 15.67 for 15:40) */
 	startHourAest?: number
+	/** Trailing intervals in grace period — "0" renders neutral instead of red */
+	graceIntervals?: number
 }
 
 /** Format hour offset to HH label, wrapping at 24 */
@@ -38,6 +40,7 @@ export function IntervalBar({
 	dataInterval = "5m",
 	label,
 	startHourAest = 0,
+	graceIntervals = 0,
 }: IntervalBarProps) {
 	const intervals = parseIntervals(bitmap)
 	const is30m = dataInterval === "30m"
@@ -60,28 +63,32 @@ export function IntervalBar({
 				return
 			}
 			const time = intervalToTime(idx, is30m, startHourAest)
-			const status = intervals[idx] ? "Present" : "Missing"
+			const graceStart = intervals.length - graceIntervals
+			const isGrace = graceIntervals > 0 && idx >= graceStart && !intervals[idx]
+			const status = intervals[idx] ? "Present" : isGrace ? "Pending" : "Missing"
 			setTooltip({
 				text: `${time} — ${status}`,
 				x: e.clientX,
 				y: rect.top,
 			})
 		},
-		[intervals, is30m, startHourAest],
+		[intervals, is30m, startHourAest, graceIntervals],
 	)
 
 	const handleMouseLeave = useCallback(() => setTooltip(null), [])
 
 	// Build cells grouped by hour for subtle dividers
+	const graceStart = intervals.length - graceIntervals
 	const cells: React.ReactNode[] = []
 	for (let i = 0; i < intervals.length; i++) {
 		const isHourBoundary = i > 0 && i % intervalsPerHour === 0
+		const isGrace = graceIntervals > 0 && i >= graceStart && !intervals[i]
 		cells.push(
 			<div
 				key={i}
 				className={cn(
 					"flex-1 min-w-0",
-					intervals[i] ? "bg-emerald-500" : "bg-red-500/70",
+					intervals[i] ? "bg-emerald-500" : isGrace ? "bg-muted-foreground/15" : "bg-red-500/70",
 					isHourBoundary && "ml-px",
 				)}
 			/>,

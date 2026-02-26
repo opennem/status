@@ -4,7 +4,7 @@ import { RegionTable } from "@/components/region_table"
 import { Skeleton } from "@/components/ui/skeleton"
 import { UptimeBars } from "@/components/uptime_bars"
 import { useCurrentStatus, useStatusHistory } from "@/hooks/use_status"
-import { HISTORY_DAYS, NEM_REGIONS, SERIES_DEFINITIONS } from "@/lib/constants"
+import { GRACE_INTERVALS, HISTORY_DAYS, NEM_REGIONS, SERIES_DEFINITIONS } from "@/lib/constants"
 import { formatShortDate, formatUptime, uptimePercent } from "@/lib/uptime"
 import { NotFoundPage } from "@/pages/not_found"
 import type { HistoryDay, SeriesId } from "@/types/status"
@@ -142,6 +142,7 @@ export function SeriesDetailPage() {
 								dataInterval={definition.dataInterval as "5m" | "30m"}
 								label={region}
 								startHourAest={isToday ? todayStartHourAest : 0}
+								graceIntervals={isToday ? GRACE_INTERVALS : 0}
 							/>
 						)
 					})}
