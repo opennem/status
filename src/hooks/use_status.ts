@@ -6,7 +6,7 @@ const BASE_URL = import.meta.env.VITE_BLOB_BASE_URL || "/data"
 const HEALTH_URL = import.meta.env.VITE_BLOB_BASE_URL ? "/api/health-data" : "/data/api-health.json"
 
 async function fetchJson<T>(path: string): Promise<T> {
-	const res = await fetch(`${BASE_URL}/${path}`)
+	const res = await fetch(`${BASE_URL}/${path}?t=${Date.now()}`)
 	if (!res.ok) throw new Error(`Failed to fetch ${path}: ${res.status}`)
 	return res.json() as Promise<T>
 }
@@ -32,7 +32,7 @@ export function useStatusHistory() {
 }
 
 async function fetchHealth(): Promise<ApiHealthData> {
-	const res = await fetch(HEALTH_URL)
+	const res = await fetch(`${HEALTH_URL}?t=${Date.now()}`)
 	if (!res.ok) throw new Error(`Failed to fetch health data: ${res.status}`)
 	return res.json() as Promise<ApiHealthData>
 }
