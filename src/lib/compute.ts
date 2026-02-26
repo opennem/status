@@ -7,6 +7,7 @@ import type {
 	RegionStatus,
 	SeriesStatus,
 	StatusHistory,
+	StatusSummary,
 } from "../types/status.js"
 import {
 	CRON_OFFSET_MINUTES,
@@ -289,4 +290,28 @@ export function updateHistory(
 /** Compute overall status across all series */
 export function computeOverallStatus(series: SeriesStatus[]): HealthStatus {
 	return series.reduce<HealthStatus>((worst, s) => worstStatus(worst, s.status), "operational")
+}
+
+const STATUS_COLORS: Record<HealthStatus, string> = {
+	operational: "#10b981",
+	degraded: "#f59e0b",
+	down: "#ef4444",
+}
+
+const STATUS_LABELS: Record<HealthStatus, string> = {
+	operational: "All Systems Operational",
+	degraded: "Degraded Performance",
+	down: "Service Disruption",
+}
+
+/** Build lightweight summary for external embeds */
+export function buildStatusSummary(current: CurrentStatus): StatusSummary {
+	const status = computeOverallStatus(current.series)
+	return {
+		status,
+		apiLatencyMs: current.apiLatencyMs,
+		checkedAt: current.checkedAt,
+		statusColor: STATUS_COLORS[status],
+		statusLabel: STATUS_LABELS[status],
+	}
 }

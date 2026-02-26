@@ -1,13 +1,14 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { OpenElectricityClient, getNetworkTimezoneOffset } from "openelectricity"
-import { computeCurrentStatus, updateHistory } from "../src/lib/compute"
+import { buildStatusSummary, computeCurrentStatus, updateHistory } from "../src/lib/compute"
 import type { ApiHealthData, StatusHistory } from "../src/types/status"
 
 const OUT_DIR = resolve(import.meta.dirname, "../public/data")
 const CURRENT_PATH = resolve(OUT_DIR, "current.json")
 const HISTORY_PATH = resolve(OUT_DIR, "history.json")
 const HEALTH_PATH = resolve(OUT_DIR, "api-health.json")
+const SUMMARY_PATH = resolve(OUT_DIR, "summary.json")
 
 const AEST_MS = getNetworkTimezoneOffset("NEM")
 
@@ -94,13 +95,17 @@ async function main() {
 		healthData.checks.splice(0, healthData.checks.length - MAX_HEALTH_CHECKS)
 	}
 
+	const summary = buildStatusSummary(current)
+
 	writeFileSync(CURRENT_PATH, JSON.stringify(current, null, 2))
 	writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2))
 	writeFileSync(HEALTH_PATH, JSON.stringify(healthData, null, 2))
+	writeFileSync(SUMMARY_PATH, JSON.stringify(summary, null, 2))
 
 	console.log(`Wrote ${CURRENT_PATH}`)
 	console.log(`Wrote ${HISTORY_PATH}`)
 	console.log(`Wrote ${HEALTH_PATH}`)
+	console.log(`Wrote ${SUMMARY_PATH}`)
 
 	for (const s of current.series) {
 		console.log(`  ${s.id}: ${s.status} (lag ${s.lagMinutes}m, coverage ${s.coverage}%)`)

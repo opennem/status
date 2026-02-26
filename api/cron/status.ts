@@ -2,7 +2,7 @@ import { list, put } from "@vercel/blob"
 import { kv } from "@vercel/kv"
 import type { VercelRequest, VercelResponse } from "@vercel/node"
 import { OpenElectricityClient, getNetworkTimezoneOffset } from "openelectricity"
-import { computeCurrentStatus, updateHistory } from "../../src/lib/compute.js"
+import { buildStatusSummary, computeCurrentStatus, updateHistory } from "../../src/lib/compute.js"
 import type { ApiHealthData, StatusHistory } from "../../src/types/status.js"
 
 const AEST_MS = getNetworkTimezoneOffset("NEM")
@@ -103,7 +103,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 	}
 	await kv.set("api-health", { checks } satisfies ApiHealthData)
 
-	await Promise.all([writeBlob("current.json", current), writeBlob("history.json", history)])
+	const summary = buildStatusSummary(current)
+
+	await Promise.all([
+		writeBlob("current.json", current),
+		writeBlob("history.json", history),
+		writeBlob("summary.json", summary),
+	])
 
 	return res.status(200).json({ ok: true, checkedAt: current.checkedAt, apiLatencyMs })
 }

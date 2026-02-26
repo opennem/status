@@ -68,6 +68,15 @@ export interface HistoryDay {
 	regions: Record<string, RegionDayCounts>
 }
 
+/** summary.json schema — lightweight status for embeds */
+export interface StatusSummary {
+	status: HealthStatus
+	apiLatencyMs: number
+	checkedAt: string
+	statusColor: string
+	statusLabel: string
+}
+
 /** history.json schema */
 export interface StatusHistory {
 	v: 1
