@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { UptimeBars } from "@/components/uptime_bars"
 import { useCurrentStatus, useStatusHistory } from "@/hooks/use_status"
 import { HISTORY_DAYS, NEM_REGIONS, SERIES_DEFINITIONS } from "@/lib/constants"
-import { formatUptime, uptimePercent } from "@/lib/uptime"
+import { formatShortDate, formatUptime, uptimePercent } from "@/lib/uptime"
 import type { HistoryDay, SeriesId } from "@/types/status"
 import { format, parseISO } from "date-fns"
 import { useState } from "react"
@@ -152,6 +152,20 @@ export function SeriesDetailPage() {
 						</div>
 					)
 				})}
+				<div className="flex justify-between mt-1">
+					<span className="text-[10px] text-muted-foreground font-mono">
+						{formatShortDate(
+							(() => {
+								const d = new Date()
+								d.setDate(d.getDate() - (HISTORY_DAYS - 1))
+								return d
+							})(),
+						)}
+					</span>
+					<span className="text-[10px] text-muted-foreground font-mono">
+						{formatShortDate(new Date())}
+					</span>
+				</div>
 			</div>
 
 			{/* Region table */}

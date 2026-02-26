@@ -1,6 +1,6 @@
 import { DayTooltip } from "@/components/day_tooltip"
 import { HISTORY_DAYS } from "@/lib/constants"
-import { dayStatus } from "@/lib/uptime"
+import { dayStatus, formatShortDate } from "@/lib/uptime"
 import { cn } from "@/lib/utils"
 import type { HistoryDay } from "@/types/status"
 import { useCallback, useRef, useState } from "react"
@@ -81,8 +81,18 @@ export function UptimeBars({
 			</div>
 			{showLabels && (
 				<div className="flex justify-between mt-1">
-					<span className="text-[10px] text-muted-foreground font-mono">30 days ago</span>
-					<span className="text-[10px] text-muted-foreground font-mono">Today</span>
+					<span className="text-[10px] text-muted-foreground font-mono">
+						{formatShortDate(
+							(() => {
+								const d = new Date()
+								d.setDate(d.getDate() - (HISTORY_DAYS - 1))
+								return d
+							})(),
+						)}
+					</span>
+					<span className="text-[10px] text-muted-foreground font-mono">
+						{formatShortDate(new Date())}
+					</span>
 				</div>
 			)}
 			{hovered && <DayTooltip day={hovered.day} x={hovered.x} y={hovered.y} />}

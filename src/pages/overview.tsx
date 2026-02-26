@@ -2,7 +2,8 @@ import { SeriesRow } from "@/components/series_row"
 import { StatusHeader } from "@/components/status_header"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useCurrentStatus, useStatusHistory } from "@/hooks/use_status"
-import { SERIES_DEFINITIONS } from "@/lib/constants"
+import { HISTORY_DAYS, SERIES_DEFINITIONS } from "@/lib/constants"
+import { formatShortDate } from "@/lib/uptime"
 import { AlertCircle } from "lucide-react"
 
 export function OverviewPage() {
@@ -56,8 +57,18 @@ export function OverviewPage() {
 
 			<div className="px-6 py-3">
 				<div className="flex justify-between">
-					<span className="text-[10px] text-muted-foreground font-mono">30 days ago</span>
-					<span className="text-[10px] text-muted-foreground font-mono">Today</span>
+					<span className="text-[10px] text-muted-foreground font-mono">
+						{formatShortDate(
+							(() => {
+								const d = new Date()
+								d.setDate(d.getDate() - (HISTORY_DAYS - 1))
+								return d
+							})(),
+						)}
+					</span>
+					<span className="text-[10px] text-muted-foreground font-mono">
+						{formatShortDate(new Date())}
+					</span>
 				</div>
 			</div>
 		</>
