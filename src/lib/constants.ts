@@ -1,4 +1,4 @@
-import type { SeriesId } from "@/types/status"
+import type { SeriesId } from "../types/status.js"
 
 export const NEM_REGIONS = ["NSW1", "QLD1", "VIC1", "SA1", "TAS1"] as const
 

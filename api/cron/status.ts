@@ -1,8 +1,8 @@
 import { list, put } from "@vercel/blob"
 import type { VercelRequest, VercelResponse } from "@vercel/node"
 import { OpenElectricityClient, getNetworkTimezoneOffset } from "openelectricity"
-import { computeCurrentStatus, updateHistory } from "../../src/lib/compute"
-import type { StatusHistory } from "../../src/types/status"
+import { computeCurrentStatus, updateHistory } from "../../src/lib/compute.js"
+import type { StatusHistory } from "../../src/types/status.js"
 
 const AEST_MS = getNetworkTimezoneOffset("NEM")
 

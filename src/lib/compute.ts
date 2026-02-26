@@ -1,3 +1,5 @@
+import type { INetworkTimeSeries, ITimeSeriesResult } from "openelectricity"
+import { getNetworkTimezoneOffset } from "openelectricity"
 import type {
 	CurrentStatus,
 	HealthStatus,
@@ -5,10 +7,8 @@ import type {
 	RegionStatus,
 	SeriesStatus,
 	StatusHistory,
-} from "@/types/status"
-import type { INetworkTimeSeries, ITimeSeriesResult } from "openelectricity"
-import { getNetworkTimezoneOffset } from "openelectricity"
-import { COVERAGE_THRESHOLDS, NEM_REGIONS, SERIES_DEFINITIONS } from "./constants"
+} from "../types/status.js"
+import { COVERAGE_THRESHOLDS, NEM_REGIONS, SERIES_DEFINITIONS } from "./constants.js"
 
 const AEST_MS = getNetworkTimezoneOffset("NEM")
 
