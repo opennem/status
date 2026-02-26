@@ -5,6 +5,7 @@
 		"module": "ESNext",
 		"skipLibCheck": true,
 		"moduleResolution": "bundler",
+		"types": ["@types/bun"],
 		"allowImportingTsExtensions": true,
 		"isolatedModules": true,
 		"moduleDetection": "force",
