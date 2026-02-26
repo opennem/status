@@ -9,7 +9,7 @@ const STATUS_COLORS = {
 	operational: "bg-emerald-500",
 	degraded: "bg-amber-500",
 	down: "bg-red-500",
-	empty: "bg-muted-foreground/10",
+	empty: "bg-red-500",
 } as const
 
 interface UptimeBarsProps {

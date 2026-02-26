@@ -1,9 +1,9 @@
 import type { HealthStatus, HistoryDay } from "@/types/status"
 
 /** Determine overall status for a single day.
- * red (down) = no data at all; orange (degraded) = some data missing; green = all ok */
+ * Any day with a HistoryDay entry has data → at worst orange (degraded).
+ * Red (down) is only for null slots (no data at all) via the empty color. */
 export function dayStatus(day: HistoryDay): HealthStatus {
-	if (day.ok === 0 && day.degraded === 0) return "down"
 	if (day.down > 0 || day.degraded > 0) return "degraded"
 	return "operational"
 }

@@ -202,12 +202,13 @@ async function main() {
 				else seriesDown++
 			}
 
+			const worstStatus = seriesDown > 0 ? "down" : seriesDegraded > 0 ? "degraded" : "operational"
 			const day: HistoryDay = {
 				date: dateStr,
 				checks: 1,
-				ok: seriesOk,
-				degraded: seriesDegraded,
-				down: seriesDown,
+				ok: worstStatus === "operational" ? 1 : 0,
+				degraded: worstStatus === "degraded" ? 1 : 0,
+				down: worstStatus === "down" ? 1 : 0,
 				regions,
 			}
 
