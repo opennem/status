@@ -11,15 +11,16 @@ export interface SeriesDefinition {
 	name: string
 	description: string
 	dataInterval: string
-	/** Minutes */
-	thresholds: { ok: number; warning: number }
 }
 
 /** Cron runs 2min after each 5min boundary — subtract from raw lag for display */
 export const CRON_OFFSET_MINUTES = 2
 
-/** Trailing intervals treated as "pending" (AEMO publishes ~5min after interval end) */
-export const GRACE_INTERVALS = 3
+/** Trailing missing intervals → status thresholds */
+export const STATUS_THRESHOLDS = {
+	operational: 3, // ≤3 missing = operational (grace window)
+	degraded: 12, // 4–11 = degraded, ≥12 = down
+} as const
 
 export const SERIES_DEFINITIONS: SeriesDefinition[] = [
 	{
@@ -27,53 +28,41 @@ export const SERIES_DEFINITIONS: SeriesDefinition[] = [
 		name: "Generation",
 		description: "Dispatch generation",
 		dataInterval: "5m",
-		thresholds: { ok: 15, warning: 30 },
 	},
 	{
 		id: "rooftop_aemo",
 		name: "Rooftop Solar (AEMO)",
 		description: "Rooftop forecast",
 		dataInterval: "30m",
-		thresholds: { ok: 55, warning: 75 },
 	},
 	{
 		id: "rooftop_apvi",
 		name: "Rooftop Solar (APVI)",
 		description: "Rooftop actual",
 		dataInterval: "5m",
-		thresholds: { ok: 25, warning: 45 },
 	},
 	{
 		id: "price",
 		name: "Price",
 		description: "Spot price",
 		dataInterval: "5m",
-		thresholds: { ok: 15, warning: 30 },
 	},
 	{
 		id: "demand",
 		name: "Demand",
 		description: "Operational demand",
 		dataInterval: "5m",
-		thresholds: { ok: 15, warning: 30 },
 	},
 	{
 		id: "interconnectors",
 		name: "Interconnectors",
 		description: "Interconnector flows",
 		dataInterval: "5m",
-		thresholds: { ok: 15, warning: 30 },
 	},
 	{
 		id: "emissions",
 		name: "Emissions",
 		description: "Emissions intensity",
 		dataInterval: "5m",
-		thresholds: { ok: 15, warning: 30 },
 	},
 ]
-
-export const COVERAGE_THRESHOLDS = {
-	ok: 98,
-	warning: 90,
-} as const

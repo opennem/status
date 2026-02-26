@@ -9,24 +9,27 @@ import type {
 	StatusHistory,
 } from "../types/status.js"
 import {
-	COVERAGE_THRESHOLDS,
 	CRON_OFFSET_MINUTES,
-	GRACE_INTERVALS,
 	NEM_REGIONS,
 	SERIES_DEFINITIONS,
+	STATUS_THRESHOLDS,
 } from "./constants.js"
 
 const AEST_MS = getNetworkTimezoneOffset("NEM")
 
-function lagToStatus(lagMinutes: number, okThreshold: number, warnThreshold: number): HealthStatus {
-	if (lagMinutes <= okThreshold) return "operational"
-	if (lagMinutes <= warnThreshold) return "degraded"
-	return "down"
+/** Count consecutive "0"s from end of bitmap */
+function trailingMissingCount(bits: string[]): number {
+	let count = 0
+	for (let i = bits.length - 1; i >= 0; i--) {
+		if (bits[i] === "0") count++
+		else break
+	}
+	return count
 }
 
-function coverageToStatus(coverage: number): HealthStatus {
-	if (coverage >= COVERAGE_THRESHOLDS.ok) return "operational"
-	if (coverage >= COVERAGE_THRESHOLDS.warning) return "degraded"
+function missingToStatus(count: number): HealthStatus {
+	if (count <= STATUS_THRESHOLDS.operational) return "operational"
+	if (count < STATUS_THRESHOLDS.degraded) return "degraded"
 	return "down"
 }
 
@@ -49,7 +52,6 @@ function analyzeRegionData(
 	results: ITimeSeriesResult[],
 	dataInterval: string,
 	windowStart: Date,
-	now: Date,
 ): { lastUpdate: Date | null; coverage: number; intervals: string } {
 	const totalExpected = expectedIntervals(dataInterval)
 	const intMs = intervalMs(dataInterval)
@@ -86,18 +88,7 @@ function analyzeRegionData(
 	}
 
 	// Exclude trailing grace-period slots from coverage denominator
-	const nowAest = now.getTime() + AEST_MS
-	const graceThreshold = nowAest - GRACE_INTERVALS * intMs
-	let graceCount = 0
-	for (let i = totalExpected - 1; i >= 0; i--) {
-		const t = alignedStart + i * intMs
-		if (t >= graceThreshold && bits[i] === "0") {
-			graceCount++
-		} else {
-			break
-		}
-	}
-
+	const graceCount = trailingMissingCount(bits)
 	const effectiveTotal = totalExpected - graceCount
 	const coverage = effectiveTotal > 0 ? (presentCount / effectiveTotal) * 100 : 0
 
@@ -130,15 +121,8 @@ function buildRegionStatus(
 	dataInterval: string,
 	windowStart: Date,
 	now: Date,
-	okThreshold: number,
-	warnThreshold: number,
 ): RegionStatus {
-	const { lastUpdate, coverage, intervals } = analyzeRegionData(
-		results,
-		dataInterval,
-		windowStart,
-		now,
-	)
+	const { lastUpdate, coverage, intervals } = analyzeRegionData(results, dataInterval, windowStart)
 
 	const rawLagMinutes = lastUpdate
 		? (now.getTime() - lastUpdate.getTime()) / 60000
@@ -146,12 +130,12 @@ function buildRegionStatus(
 	// Subtract cron offset for display — cron runs 2min after interval boundary
 	const displayLag = Math.max(0, rawLagMinutes - CRON_OFFSET_MINUTES)
 
-	const lagStatus = lagToStatus(rawLagMinutes, okThreshold, warnThreshold)
-	const covStatus = coverageToStatus(coverage)
+	const bits = intervals.split("")
+	const missing = trailingMissingCount(bits)
 
 	return {
 		region,
-		status: worstStatus(lagStatus, covStatus),
+		status: missingToStatus(missing),
 		lagMinutes: Math.round(rawLagMinutes === Number.POSITIVE_INFINITY ? -1 : displayLag),
 		coverage: Math.round(coverage * 10) / 10,
 		intervals,
@@ -228,17 +212,7 @@ export function computeCurrentStatus(
 				priceSeries,
 				demandSeries,
 			)
-			regions.push(
-				buildRegionStatus(
-					region,
-					regionResults,
-					def.dataInterval,
-					windowStart,
-					now,
-					def.thresholds.ok,
-					def.thresholds.warning,
-				),
-			)
+			regions.push(buildRegionStatus(region, regionResults, def.dataInterval, windowStart, now))
 		}
 
 		const overallStatus = regions.reduce<HealthStatus>(

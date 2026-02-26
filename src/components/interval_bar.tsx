@@ -1,3 +1,4 @@
+import { STATUS_THRESHOLDS } from "@/lib/constants"
 import { parseIntervals } from "@/lib/uptime"
 import { cn } from "@/lib/utils"
 import { useCallback, useRef, useState } from "react"
@@ -11,8 +12,8 @@ interface IntervalBarProps {
 	label?: string
 	/** AEST start hour of the window (0 for midnight-based, e.g. 15.67 for 15:40) */
 	startHourAest?: number
-	/** Trailing intervals in grace period — "0" renders neutral instead of red */
-	graceIntervals?: number
+	/** Whether to show trailing grace period (today's live view) */
+	showGrace?: boolean
 }
 
 /** Format hour offset to HH label, wrapping at 24 */
@@ -40,10 +41,11 @@ export function IntervalBar({
 	dataInterval = "5m",
 	label,
 	startHourAest = 0,
-	graceIntervals = 0,
+	showGrace = false,
 }: IntervalBarProps) {
 	const intervals = parseIntervals(bitmap)
 	const is30m = dataInterval === "30m"
+	const graceIntervals = showGrace ? STATUS_THRESHOLDS.operational : 0
 	const intervalsPerHour = is30m ? 2 : 12
 	const containerRef = useRef<HTMLDivElement>(null)
 	const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null)
