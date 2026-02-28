@@ -1,4 +1,4 @@
-import { STATUS_THRESHOLDS } from "@/lib/constants"
+import { GAP_SEVERITY } from "@/lib/constants"
 import { parseIntervals } from "@/lib/uptime"
 import { cn } from "@/lib/utils"
 import { useCallback, useRef, useState } from "react"
@@ -45,7 +45,6 @@ export function IntervalBar({
 }: IntervalBarProps) {
 	const intervals = parseIntervals(bitmap)
 	const is30m = dataInterval === "30m"
-	const graceIntervals = showGrace ? STATUS_THRESHOLDS.operational : 0
 	const intervalsPerHour = is30m ? 2 : 12
 	const containerRef = useRef<HTMLDivElement>(null)
 	const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null)
@@ -65,35 +64,49 @@ export function IntervalBar({
 				return
 			}
 			const time = intervalToTime(idx, is30m, startHourAest)
-			const graceStart = intervals.length - graceIntervals
-			const isGrace = graceIntervals > 0 && idx >= graceStart && !intervals[idx]
-			const status = intervals[idx] ? "Present" : isGrace ? "Pending" : "Missing"
+			const distFromEnd = intervals.length - idx
+			const status = intervals[idx]
+				? "Present"
+				: showGrace && distFromEnd <= GAP_SEVERITY.grace
+					? "Pending"
+					: showGrace && distFromEnd <= GAP_SEVERITY.warning
+						? "Warning"
+						: "Missing"
 			setTooltip({
 				text: `${time} — ${status}`,
 				x: e.clientX,
 				y: rect.top,
 			})
 		},
-		[intervals, is30m, startHourAest, graceIntervals],
+		[intervals, is30m, startHourAest, showGrace],
 	)
 
 	const handleMouseLeave = useCallback(() => setTooltip(null), [])
 
 	// Build cells grouped by hour for subtle dividers
-	const graceStart = intervals.length - graceIntervals
+	// Graduated gap severity: trailing missing intervals get gray → amber → red
 	const cells: React.ReactNode[] = []
 	for (let i = 0; i < intervals.length; i++) {
 		const isHourBoundary = i > 0 && i % intervalsPerHour === 0
-		const isGrace = graceIntervals > 0 && i >= graceStart && !intervals[i]
+		let cellColor: string
+		if (intervals[i]) {
+			cellColor = "bg-emerald-500"
+		} else if (showGrace) {
+			// Graduated severity: distance from end determines color
+			const distFromEnd = intervals.length - i
+			if (distFromEnd <= GAP_SEVERITY.grace) {
+				cellColor = "bg-muted-foreground/15" // grace — gray
+			} else if (distFromEnd <= GAP_SEVERITY.warning) {
+				cellColor = "bg-amber-500/70" // warning — amber
+			} else {
+				cellColor = "bg-red-500/70" // outage — red
+			}
+		} else {
+			// Historical view: binary green/red
+			cellColor = "bg-red-500/70"
+		}
 		cells.push(
-			<div
-				key={i}
-				className={cn(
-					"flex-1 min-w-0",
-					intervals[i] ? "bg-emerald-500" : isGrace ? "bg-muted-foreground/15" : "bg-red-500/70",
-					isHourBoundary && "ml-px",
-				)}
-			/>,
+			<div key={i} className={cn("flex-1 min-w-0", cellColor, isHourBoundary && "ml-px")} />,
 		)
 	}
 
@@ -104,13 +117,18 @@ export function IntervalBar({
 					{label}
 				</span>
 			)}
-			<div
-				ref={containerRef}
-				className="flex h-5 rounded-sm overflow-hidden cursor-crosshair"
-				onMouseMove={handleMouseMove}
-				onMouseLeave={handleMouseLeave}
-			>
-				{cells}
+			<div className="relative">
+				<div
+					ref={containerRef}
+					className="flex h-5 rounded-sm overflow-hidden cursor-crosshair"
+					onMouseMove={handleMouseMove}
+					onMouseLeave={handleMouseLeave}
+				>
+					{cells}
+				</div>
+				{showGrace && (
+					<div className="absolute right-0 top-0 h-5 w-0.5 bg-foreground/60 rounded-full" />
+				)}
 			</div>
 			{/* Hour labels */}
 			<div className="flex justify-between mt-0.5 px-0">

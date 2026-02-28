@@ -22,6 +22,13 @@ export const STATUS_THRESHOLDS = {
 	degraded: 12, // 4–11 = degraded, ≥12 = down
 } as const
 
+/** Visual gap severity for interval bar coloring (trailing missing intervals from end) */
+export const GAP_SEVERITY = {
+	grace: 3, // ≤3 intervals (15 min) — gray/pending
+	warning: 6, // 4-6 intervals (15-30 min) — amber
+	// >6 intervals (30+ min) — red
+} as const
+
 export const SERIES_DEFINITIONS: SeriesDefinition[] = [
 	{
 		id: "generation",
